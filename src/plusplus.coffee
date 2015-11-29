@@ -35,13 +35,13 @@ module.exports = (robot) ->
     # from beginning of line
     ^
     # the thing being upvoted, which is any number of words and spaces
-    ([\s\w'@.\-:]*)
+    ([\s'@.\-:]*)
     # allow for spaces after the thing being upvoted (@user ++)
     \s*
     # the increment/decrement operator ++ or --
-    (\+\+|--|—)
+    (\+\+|--|—|\#)
     # optional reason for the plusplus
-    (?:\s+(?:for|because|cause|cuz|bo)\s+(.+))?
+    (?:\s+(?:for|because|cause|cuz|bo|to)\s+(.+))?
     $ # end of line
   ///i, (msg) ->
     # let's get our local vars in place
@@ -64,10 +64,12 @@ module.exports = (robot) ->
       reason = lastReason if !reason? && lastReason?
 
     # do the {up, down}vote, and figure out what the new score is
-    [score, reasonScore] = if operator == "++"
-              scoreKeeper.add(name, from, room, reason)
-            else
-              scoreKeeper.subtract(name, from, room, reason)
+    if operator == "++"
+      [score, reasonScore] = scoreKeeper.add(name, from, room, reason)
+    else if robot.auth.hasRole(msg.envelope.user,'admin') && operator == "#" && reason == "to"
+      [score, reasonScore] = scoreKeeper.set(name, from, room, reason)
+    else
+      [score, reasonScore] = scoreKeeper.subtract(name, from, room, reason)
 
     # if we got a score, then display all the things and fire off events!
     if score?
