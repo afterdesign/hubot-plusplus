@@ -33,7 +33,7 @@ module.exports = (robot) ->
   # sweet regex bro
   robot.hear ///
     # the thing being upvoted, which is any number of words and spaces
-    ([\w'@.\-:]*)
+    ([\w'@.\-_:]*)
     # allow for spaces after the thing being upvoted (@user ++)
     \s*
     # the increment/decrement operator ++ or --
@@ -65,7 +65,10 @@ module.exports = (robot) ->
     if operator == "++"
       [score, reasonScore] = scoreKeeper.add(name, from, room, reason)
     else if operator == "#"
-      if robot.auth.hasRole(msg.envelope.user,'admin')
+      if msg.envelope.user.id == undefined
+        msg.envelope.user.id = msg.envelope.user.name
+
+      if robot.auth.hasRole(msg.envelope.user, 'admin')
         [score, reasonScore] = scoreKeeper.set(name, from, room, reason)
       else
         [null, null]
