@@ -32,16 +32,14 @@ module.exports = (robot) ->
 
   # sweet regex bro
   robot.hear ///
-    # from beginning of line
-    ^
     # the thing being upvoted, which is any number of words and spaces
-    ([\s'@.\-:]*)
+    ([\w'@.\-:]*)
     # allow for spaces after the thing being upvoted (@user ++)
     \s*
     # the increment/decrement operator ++ or --
     (\+\+|--|—|\#)
     # optional reason for the plusplus
-    (?:\s+(?:for|because|cause|cuz|bo|to)\s+(.+))?
+    (?:\s+(?:for|because|cause|cuz|bo)\s+(.+))?
     $ # end of line
   ///i, (msg) ->
     # let's get our local vars in place
@@ -66,8 +64,11 @@ module.exports = (robot) ->
     # do the {up, down}vote, and figure out what the new score is
     if operator == "++"
       [score, reasonScore] = scoreKeeper.add(name, from, room, reason)
-    else if robot.auth.hasRole(msg.envelope.user,'admin') && operator == "#" && reason == "to"
-      [score, reasonScore] = scoreKeeper.set(name, from, room, reason)
+    else if operator == "#"
+      if robot.auth.hasRole(msg.envelope.user,'admin')
+        [score, reasonScore] = scoreKeeper.set(name, from, room, reason)
+      else
+        [null, null]
     else
       [score, reasonScore] = scoreKeeper.subtract(name, from, room, reason)
 
@@ -137,8 +138,6 @@ module.exports = (robot) ->
         name = (name.replace /(^\s*@)|([,\s]*$)/g, '')
       else
         name = (name.replace /(^\s*@)|([,:\s]*$)/g, '')
-
-    console.log(name)
 
     score = scoreKeeper.scoreForUser(name)
     reasons = scoreKeeper.reasonsForUser(name)

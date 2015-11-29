@@ -54,7 +54,7 @@ class ScoreKeeper
   set: (user, from, room, reason) ->
     if @validate(user, from)
       user = @getUser(user)
-      @storage.scores[user]=reason
+      @storage.scores[user]=parseInt(reason, 10)
       @storage.reasons[user] ||= {}
 
       @saveUser(user, from, room, '')
